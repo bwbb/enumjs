@@ -65,7 +65,9 @@
 
             } else if(!Object.keys(definition.constants).reduce(function (isObject, constant) {
                     return Object.getPrototypeOf(definition.constants[constant]) === Object.prototype;
-                }, true)) {
+                }, true) && (!definition.instanceParams && Object.values(definition.constants).forEach(function(constantParams) {
+                    return Array.isArray(constantParams);
+                }))) {
 
                 throw new TypeError("One or more values in the definition.constants object is not an object.");
 
@@ -76,6 +78,26 @@
                 throw new TypeError("One or more values in the definition.methods object is not a function.");
 
             }
+
+            if (definition.instanceParams) {
+                if (!Array.isArray(definition.instanceParams) || definition.instanceParams.length === 0
+                    || !definition.instanceParams.every(function(attrName) { 
+                            return typeof attrName === "string";
+                        })) {
+                    throw new TypeError("The instanceParams property must contain a non-zero length array of strings with the names of the enum instance parameters.");
+                }
+                if (!Object.values(definition.constants).every(function(constantParams) {
+                        return Array.isArray(constantParams);
+                    })) {
+                    throw new TypeError("One or more values in the definition.constants object is not an Array.");
+                }
+                if (!Object.values(definition.constants).every(function(constantParams) {
+                        return constantParams.length === definition.instanceParams.length;
+                    })) {
+                    throw new TypeError("One or more of the instance parameter arrays does not match the length defined in the instanceParams property.");
+                }
+            }
+            
         }
 
         var isArray = (definition instanceof Array);
@@ -125,19 +147,23 @@
             }
         });
 
+        if ( definition.instanceParams && definition.instanceParams.includes('val') ) {
+            Object.defineProperty(_enum, "fromVal", {
+                value: function (val) {
+                    if (typeof val === "number") {
+                        return _values.filter(function(instance) {
+                            return instance.val === val;
+                        });
+                    } else {
+                        throw new TypeError("The val parameter must be an instance of a number.");
+                    }
+                }
+            });
+        }
+
         /**
-         * The following methods are available to all instances of the enum. values() and fromName() need to be
-         * available to each constant, and so we will attach them on the prototype. But really, they're just
-         * aliases to their counterparts on the prototype.
+         * The following methods are available to all instances of the enum.
          */
-        Object.defineProperty(_enum.prototype, "values", {
-            value: _enum.values
-        });
-
-        Object.defineProperty(_enum.prototype, "fromName", {
-            value: _enum.fromName
-        });
-
         Object.defineProperty(_enum.prototype, "name", {
             value: function () {
                 return this._name;
@@ -169,7 +195,7 @@
         });
 
         /**
-         * If definition was an array, we can the element values directly. Otherwise, we will have to use the keys
+         * If definition was an array, we can use the element values directly. Otherwise, we will have to use the keys
          * from the definition.constants object. At this time we can also attach any methods (if provided) to the
          * prototype so that they are available to every instance.
          */
@@ -189,8 +215,15 @@
             // Create an instance of the enum
             var _constant = new _enum(new __(), name, ordinal);
 
-            // If definition was an object, we want to attach the provided constant-attributes to the instance.
-            if (isObject) {
+            // If definition was an object, and the constants values are arrays of parameters, attach each param to the instance
+            if (isObject && definition.instanceParams) {
+                definition.instanceParams.forEach(function(attr, i) {
+                    Object.defineProperty(_constant, attr, {
+                        value: definition.constants[name][i]
+                    });
+                });
+            } else {
+                // If definition was an object, we want to attach the provided constant-attributes to the instance.
                 Object.keys(definition.constants[name]).forEach(function (attr) {
                     Object.defineProperty(_constant, attr, {
                         value: definition.constants[name][attr]

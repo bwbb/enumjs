@@ -166,4 +166,18 @@ Your weight on URANUS is 158.39725989314937
 Your weight on NEPTUNE is 199.20741268219012
 ```
 
+It is also possible to define the enum instance parameters as an array of properties, simiar to the way enum constructors work in Java. This syntax can be used as a shortcut to the more verbose object syntax.
+
+```javascript
+var NbaTeam = Enum.define('NbaTeam', {
+    instanceParams: [ 'val', 'state', 'city' ],
+    constants: {
+        LAKERS: [1, 'CA', 'Los Angeles'],
+        CELTICS: [2, 'MA', 'Boston'],
+        WARRIORS: [3, 'CA', 'San Francisco'],
+        SPURS: [4, 'TX', 'San Antonio']
+    }
+});
+```
+
 That's pretty much it. Please try it out and let me know what you think, and if there are any issues, etc.
