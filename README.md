@@ -166,7 +166,7 @@ Your weight on URANUS is 158.39725989314937
 Your weight on NEPTUNE is 199.20741268219012
 ```
 
-It is also possible to define the enum instance parameters as an array of properties, simiar to the way enum constructors work in Java. This syntax can be used as a shortcut to the more verbose object syntax.
+The `staticMethods` parameter on the definition options object allows us to define "static" methods on the enum type itself, where `this` references the enum type class. It is also possible to define the enum instance parameters as an array of properties, simiar to the way enum constructors work in Java. This syntax can be used as a shortcut to the more verbose object syntax.
 
 ```javascript
 var NbaTeam = Enum.define('NbaTeam', {
@@ -176,8 +176,17 @@ var NbaTeam = Enum.define('NbaTeam', {
         CELTICS: [2, 'MA', 'Boston'],
         WARRIORS: [3, 'CA', 'San Francisco'],
         SPURS: [4, 'TX', 'San Antonio']
+    },
+    staticMethods: {
+        getTeamsByState: function(state) {
+            return this.values().filter(function(constant) {
+                return constant.state === state;
+            });	
+        }
     }
 });
+
+NbaTeam.getTeamsByState('CA'); // Returns LAKERS, WARRIORS
 ```
 
 That's pretty much it. Please try it out and let me know what you think, and if there are any issues, etc.

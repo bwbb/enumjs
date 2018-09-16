@@ -16,6 +16,13 @@
         root.Enum = factory();
     }
 }(this, function () {
+
+    function _methodsParamIsValid(definition, methodsParamName) {
+        return Object.keys(definition[methodsParamName]).reduce(function (isFunction, method) {
+            return isFunction && (typeof definition[methodsParamName][method] === "function");
+        }, true)
+    }
+
     /**
      * Function to define an enum
      * @param typeName - The name of the enum.
@@ -71,12 +78,10 @@
 
                 throw new TypeError("One or more values in the definition.constants object is not an object.");
 
-            } else if(!Object.keys(definition.methods).reduce(function (isFunction, method) {
-                    return isFunction && (typeof definition.methods[method] === "function");
-                }, true)) {
-
+            } else if (!_methodsParamIsValid(definition, "methods")) {
                 throw new TypeError("One or more values in the definition.methods object is not a function.");
-
+            } else if (!_methodsParamIsValid(definition, "staticMethods")) {
+                throw new TypeError("One or more values in the definition.staticMethods object is not a function.");
             }
 
             if (definition.instanceParams) {
@@ -147,11 +152,19 @@
             }
         });
 
+        if (isObject && definition.staticMethods) {
+            Object.keys(definition.staticMethods).forEach(function(methodName) {
+                Object.defineProperty(_enum, methodName, {
+                    value: definition.staticMethods[methodName]
+                });
+            });
+        }
+
         if ( definition.instanceParams && definition.instanceParams.includes('val') ) {
             Object.defineProperty(_enum, "fromVal", {
                 value: function (val) {
                     if (typeof val === "number") {
-                        return _values.filter(function(instance) {
+                        return _values.find(function(instance) {
                             return instance.val === val;
                         });
                     } else {
