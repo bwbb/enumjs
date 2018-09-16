@@ -235,7 +235,7 @@
                         value: definition.constants[name][i]
                     });
                 });
-            } else {
+            } else if (isObject) {
                 // If definition was an object, we want to attach the provided constant-attributes to the instance.
                 Object.keys(definition.constants[name]).forEach(function (attr) {
                     Object.defineProperty(_constant, attr, {
