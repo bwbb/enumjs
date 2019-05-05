@@ -18,6 +18,9 @@
 }(this, function () {
 
     function _methodsParamIsValid(definition, methodsParamName) {
+        if ( !definition[methodsParamName] ) {
+            return true;
+        }
         return Object.keys(definition[methodsParamName]).reduce(function (isFunction, method) {
             return isFunction && (typeof definition[methodsParamName][method] === "function");
         }, true)
